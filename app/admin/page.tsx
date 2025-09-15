@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
@@ -10,153 +10,71 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Switch } from "@/components/ui/switch"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Users, BookOpen, Settings, Search, Crown, Clock, FileText, LinkIcon, Plus, Trash2, Edit } from "lucide-react"
+import {
+  Users,
+  BookOpen,
+  Settings,
+  Search,
+  Crown,
+  Clock,
+  FileText,
+  LinkIcon,
+  Plus,
+  Trash2,
+  Edit,
+} from "lucide-react"
 import Link from "next/link"
+import { createClient } from "@supabase/supabase-js"
 
-const MOCK_USERS = [
-  {
-    id: "1",
-    name: "Анна Петрова",
-    email: "anna@example.com",
-    subscription: {
-      type: "monthly",
-      status: "active",
-      expiresAt: "2024-02-15",
-      subjects: ["math", "physics"],
-    },
-    plan: {
-      subject: "math",
-      targetScore: 85,
-      progress: 45,
-    },
-  },
-  {
-    id: "2",
-    name: "Михаил Иванов",
-    email: "mikhail@example.com",
-    subscription: {
-      type: "yearly",
-      status: "active",
-      expiresAt: "2024-12-31",
-      subjects: ["russian", "history", "social"],
-    },
-    plan: {
-      subject: "russian",
-      targetScore: 92,
-      progress: 78,
-    },
-  },
-  {
-    id: "3",
-    name: "Елена Сидорова",
-    email: "elena@example.com",
-    subscription: {
-      type: "monthly",
-      status: "expired",
-      expiresAt: "2024-01-10",
-      subjects: ["chemistry", "biology"],
-    },
-    plan: {
-      subject: "chemistry",
-      targetScore: 75,
-      progress: 23,
-    },
-  },
-]
+// Создаем Supabase клиент
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+)
 
-const AVAILABLE_SUBJECTS = [
-  { id: "math", name: "Математика", enabled: true },
-  { id: "russian", name: "Русский язык", enabled: true },
-  { id: "physics", name: "Физика", enabled: true },
-  { id: "chemistry", name: "Химия", enabled: true },
-  { id: "biology", name: "Биология", enabled: false },
-  { id: "history", name: "История", enabled: true },
-  { id: "social", name: "Обществознание", enabled: true },
-  { id: "english", name: "Английский язык", enabled: false },
-]
+// Типы данных
+type Subscription = {
+  type: string
+  status: string
+  expires_at: string
+  subjects: string[]
+}
 
-const MOCK_EGE_TASKS = {
-  math: [
-    {
-      id: 1,
-      name: "Простейшие текстовые задачи",
-      theory: ["https://example.com/math/task1/theory1", "https://example.com/math/task1/theory2"],
-      practice: ["https://example.com/math/task1/practice1", "https://example.com/math/task1/practice2"],
-    },
-    {
-      id: 2,
-      name: "Чтение графиков и диаграмм",
-      theory: ["https://example.com/math/task2/theory"],
-      practice: ["https://example.com/math/task2/practice"],
-    },
-    {
-      id: 3,
-      name: "Простейшие уравнения",
-      theory: [],
-      practice: [],
-    },
-    {
-      id: 4,
-      name: "Преобразования выражений",
-      theory: ["https://example.com/math/task4/theory"],
-      practice: [],
-    },
-    {
-      id: 5,
-      name: "Простейшие текстовые задачи",
-      theory: [],
-      practice: ["https://example.com/math/task5/practice"],
-    },
-  ],
-  russian: [
-    {
-      id: 1,
-      name: "Информационная обработка текстов",
-      theory: ["https://example.com/russian/task1/theory"],
-      practice: ["https://example.com/russian/task1/practice"],
-    },
-    {
-      id: 2,
-      name: "Средства связи предложений в тексте",
-      theory: [],
-      practice: ["https://example.com/russian/task2/practice"],
-    },
-    {
-      id: 3,
-      name: "Лексическое значение слова",
-      theory: ["https://example.com/russian/task3/theory"],
-      practice: [],
-    },
-  ],
-  physics: [
-    {
-      id: 1,
-      name: "Равномерное прямолинейное движение",
-      theory: ["https://example.com/physics/task1/theory"],
-      practice: ["https://example.com/physics/task1/practice"],
-    },
-    {
-      id: 2,
-      name: "Законы Ньютона",
-      theory: [],
-      practice: [],
-    },
-    {
-      id: 3,
-      name: "Закон сохранения импульса",
-      theory: ["https://example.com/physics/task3/theory"],
-      practice: ["https://example.com/physics/task3/practice"],
-    },
-  ],
+type Plan = {
+  subject_id: string
+  target_score: number
+  progress: number
+}
+
+type User = {
+  id: string
+  name: string
+  email: string
+  subscriptions: Subscription
+  user_plans: Plan
+}
+
+type Subject = {
+  id: string
+  name: string
+  enabled: boolean
+}
+
+type Task = {
+  id: number
+  subject_id: string
+  name: string
+  theory_links: string[]
+  practice_links: string[]
 }
 
 export default function AdminPage() {
-  const [users, setUsers] = useState(MOCK_USERS)
-  const [subjects, setSubjects] = useState(AVAILABLE_SUBJECTS)
+  const [users, setUsers] = useState<User[]>([])
+  const [subjects, setSubjects] = useState<Subject[]>([])
+  const [egeTasks, setEgeTasks] = useState<Record<string, Task[]>>({})
   const [searchTerm, setSearchTerm] = useState("")
   const [filterStatus, setFilterStatus] = useState("all")
-  const [egeTasks, setEgeTasks] = useState(MOCK_EGE_TASKS)
-  const [selectedSubject, setSelectedSubject] = useState("math")
+  const [selectedSubject, setSelectedSubject] = useState<string>("")
   const [editingTask, setEditingTask] = useState<{
     id: number
     field: "theory" | "practice" | "name"
@@ -165,64 +83,144 @@ export default function AdminPage() {
   } | null>(null)
   const [newTaskName, setNewTaskName] = useState("")
 
+  // Загружаем данные из базы при старте
+  useEffect(() => {
+    const fetchData = async () => {
+      // Пользователи с подписками и планами
+      const { data: usersData, error: usersError } = await supabase
+        .from("users")
+        .select(`
+          id, name, email,
+          subscriptions:type, subscriptions:status, subscriptions:expires_at, subscriptions:subjects,
+          user_plans:subject_id, user_plans:target_score, user_plans:progress
+        `)
+      if (!usersError && usersData) setUsers(usersData as User[])
+
+      // Предметы
+      const { data: subjectsData, error: subjectsError } = await supabase.from("subjects").select("*")
+      if (!subjectsError && subjectsData) {
+        setSubjects(subjectsData as Subject[])
+        if (!selectedSubject && subjectsData.length > 0) setSelectedSubject(subjectsData[0].id)
+      }
+
+      // Задания ЕГЭ
+      const { data: tasksData, error: tasksError } = await supabase.from("tasks").select("*")
+      if (!tasksError && tasksData) {
+        const tasksBySubject: Record<string, Task[]> = {}
+        (tasksData as Task[]).forEach((task) => {
+          if (!tasksBySubject[task.subject_id]) tasksBySubject[task.subject_id] = []
+          tasksBySubject[task.subject_id].push(task)
+        })
+        setEgeTasks(tasksBySubject)
+      }
+    }
+
+    fetchData()
+  }, [])
+
   const filteredUsers = users.filter((user) => {
     const matchesSearch =
       user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       user.email.toLowerCase().includes(searchTerm.toLowerCase())
-    const matchesStatus = filterStatus === "all" || user.subscription.status === filterStatus
+    const matchesStatus = filterStatus === "all" || user.subscriptions.status === filterStatus
     return matchesSearch && matchesStatus
   })
 
-  const handleExtendSubscription = (userId: string, months: number) => {
-    setUsers((prev) =>
-      prev.map((user) => {
-        if (user.id === userId) {
-          const currentDate = new Date(user.subscription.expiresAt)
-          const newDate = new Date(currentDate.setMonth(currentDate.getMonth() + months))
-          return {
-            ...user,
-            subscription: {
-              ...user.subscription,
-              status: "active",
-              expiresAt: newDate.toISOString().split("T")[0],
-            },
-          }
-        }
-        return user
-      }),
-    )
+  // Управление подписками
+  const handleExtendSubscription = async (userId: string, months: number) => {
+    const user = users.find((u) => u.id === userId)
+    if (!user) return
+
+    const currentDate = new Date(user.subscriptions.expires_at)
+    currentDate.setMonth(currentDate.getMonth() + months)
+
+    const { error } = await supabase
+      .from("subscriptions")
+      .update({ status: "active", expires_at: currentDate.toISOString().split("T")[0] })
+      .eq("user_id", userId)
+
+    if (!error) {
+      setUsers((prev) =>
+        prev.map((u) =>
+          u.id === userId
+            ? {
+                ...u,
+                subscriptions: { ...u.subscriptions, status: "active", expires_at: currentDate.toISOString().split("T")[0] },
+              }
+            : u,
+        ),
+      )
+    }
   }
 
-  const handleToggleSubject = (subjectId: string) => {
-    setSubjects((prev) =>
-      prev.map((subject) => (subject.id === subjectId ? { ...subject, enabled: !subject.enabled } : subject)),
-    )
+  // Управление предметами
+  const handleToggleSubject = async (subjectId: string) => {
+    const subject = subjects.find((s) => s.id === subjectId)
+    if (!subject) return
+
+    const { error } = await supabase.from("subjects").update({ enabled: !subject.enabled }).eq("id", subjectId)
+
+    if (!error) {
+      setSubjects((prev) =>
+        prev.map((s) => (s.id === subjectId ? { ...s, enabled: !s.enabled } : s)),
+      )
+    }
   }
 
-  const handleUpdateTaskMaterial = (
+  // Управление заданиями
+  const handleAddTask = async () => {
+    if (!newTaskName.trim()) return
+    const { data, error } = await supabase
+      .from("tasks")
+      .insert({ subject_id: selectedSubject, name: newTaskName.trim(), theory_links: [], practice_links: [] })
+      .select()
+      .single()
+
+    if (!error && data) {
+      setEgeTasks((prev) => ({
+        ...prev,
+        [selectedSubject]: [...(prev[selectedSubject] || []), data],
+      }))
+      setNewTaskName("")
+    }
+  }
+
+  const handleDeleteTask = async (taskId: number) => {
+    const { error } = await supabase.from("tasks").delete().eq("id", taskId)
+    if (!error) {
+      setEgeTasks((prev) => ({
+        ...prev,
+        [selectedSubject]: prev[selectedSubject].filter((t) => t.id !== taskId),
+      }))
+    }
+  }
+
+  const handleUpdateTaskMaterial = async (
     subjectId: string,
     taskId: number,
     field: "theory" | "practice" | "name",
     value: string,
     linkIndex?: number,
   ) => {
-    setEgeTasks((prev) => ({
-      ...prev,
-      [subjectId]:
-        prev[subjectId as keyof typeof prev]?.map((task) => {
-          if (task.id === taskId) {
-            if (field === "name") {
-              return { ...task, name: value }
-            } else if (linkIndex !== undefined) {
-              const updatedLinks = [...task[field]]
-              updatedLinks[linkIndex] = value
-              return { ...task, [field]: updatedLinks }
-            }
-          }
-          return task
-        }) || [],
-    }))
-    setEditingTask(null)
+    const task = egeTasks[subjectId]?.find((t) => t.id === taskId)
+    if (!task) return
+
+    let updateData: any = {}
+    if (field === "name") updateData.name = value
+    else {
+      const links = [...task[field === "theory" ? "theory_links" : "practice_links"]]
+      if (linkIndex !== undefined) links[linkIndex] = value
+      updateData[field === "theory" ? "theory_links" : "practice_links"] = links
+    }
+
+    const { data, error } = await supabase.from("tasks").update(updateData).eq("id", taskId).select().single()
+    if (!error && data) {
+      setEgeTasks((prev) => ({
+        ...prev,
+        [subjectId]: prev[subjectId].map((t) => (t.id === taskId ? data : t)),
+      }))
+      setEditingTask(null)
+    }
   }
 
   const handleStartEditing = (
@@ -234,63 +232,24 @@ export default function AdminPage() {
     setEditingTask({ id: taskId, field, value: currentValue, linkIndex })
   }
 
-  const handleCancelEditing = () => {
-    setEditingTask(null)
-  }
-
-  const handleAddTask = () => {
-    if (!newTaskName.trim()) return
-
-    const currentTasks = egeTasks[selectedSubject as keyof typeof egeTasks] || []
-    const newId = Math.max(...currentTasks.map((t) => t.id), 0) + 1
-
-    setEgeTasks((prev) => ({
-      ...prev,
-      [selectedSubject]: [
-        ...currentTasks,
-        {
-          id: newId,
-          name: newTaskName.trim(),
-          theory: [],
-          practice: [],
-        },
-      ],
-    }))
-    setNewTaskName("")
-  }
-
-  const handleDeleteTask = (taskId: number) => {
-    setEgeTasks((prev) => ({
-      ...prev,
-      [selectedSubject]: prev[selectedSubject as keyof typeof prev]?.filter((task) => task.id !== taskId) || [],
-    }))
-  }
+  const handleCancelEditing = () => setEditingTask(null)
 
   const handleAddLink = (taskId: number, field: "theory" | "practice") => {
-    setEgeTasks((prev) => ({
-      ...prev,
-      [selectedSubject]:
-        prev[selectedSubject as keyof typeof prev]?.map((task) => {
-          if (task.id === taskId) {
-            return { ...task, [field]: [...task[field], ""] }
-          }
-          return task
-        }) || [],
-    }))
+    const task = egeTasks[selectedSubject]?.find((t) => t.id === taskId)
+    if (!task) return
+
+    const updatedLinks = [...task[field === "theory" ? "theory_links" : "practice_links"], ""]
+    handleUpdateTaskMaterial(selectedSubject, taskId, field, updatedLinks[updatedLinks.length - 1])
   }
 
   const handleDeleteLink = (taskId: number, field: "theory" | "practice", linkIndex: number) => {
-    setEgeTasks((prev) => ({
-      ...prev,
-      [selectedSubject]:
-        prev[selectedSubject as keyof typeof prev]?.map((task) => {
-          if (task.id === taskId) {
-            const updatedLinks = task[field].filter((_, index) => index !== linkIndex)
-            return { ...task, [field]: updatedLinks }
-          }
-          return task
-        }) || [],
-    }))
+    const task = egeTasks[selectedSubject]?.find((t) => t.id === taskId)
+    if (!task) return
+
+    const updatedLinks = task[field === "theory" ? "theory_links" : "practice_links"].filter(
+      (_, i) => i !== linkIndex,
+    )
+    handleUpdateTaskMaterial(selectedSubject, taskId, field, updatedLinks[0] || "")
   }
 
   const getStatusBadge = (status: string) => {
