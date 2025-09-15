@@ -50,9 +50,10 @@ type User = {
   id: string
   name: string
   email: string
-  subscriptions: Subscription
-  user_plans: Plan
+  subscriptions: Subscription[]  // массив
+  user_plans: Plan[]             // массив
 }
+
 
 type Subject = {
   id: string
@@ -88,12 +89,24 @@ export default function AdminPage() {
     const fetchData = async () => {
       // Пользователи с подписками и планами
       const { data: usersData, error: usersError } = await supabase
-        .from("users")
-        .select(`
-          id, name, email,
-          subscriptions:type, subscriptions:status, subscriptions:expires_at, subscriptions:subjects,
-          user_plans:subject_id, user_plans:target_score, user_plans:progress
-        `)
+  .from("users")
+  .select(`
+    id,
+    name,
+    email,
+    subscriptions (
+      type,
+      status,
+      expires_at,
+      subjects
+    ),
+    user_plans (
+      subject_id,
+      target_score,
+      progress
+    )
+  `)
+
       if (!usersError && usersData) setUsers(usersData as User[])
 
       // Предметы
