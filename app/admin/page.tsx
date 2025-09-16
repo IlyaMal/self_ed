@@ -85,65 +85,76 @@ export default function AdminPage() {
   const [newTaskName, setNewTaskName] = useState("")
 
   // Загружаем данные из базы при старте
-  useEffect(() => {
-    const { data, error } = await supabase
-  .from("users")
-  .select(`
-    id,
-    email,
-    subscriptions (
-      id,
-      is_active,
-      start_date,
-      end_date,
-      subject_count,
-      plan:subscription_plans (
+useEffect(() => {
+  const fetchData = async () => {
+    const { data: usersData, error: usersError } = await supabase
+      .from("users")
+      .select(`
         id,
-        name,
-        duration,
-        price,
-        subject_count,
-        features
-      )
-    ),
-    user_plans (
-      id,
-      subject_id,
-      target_score,
-      duration,
-      study_hours,
-      goals,
-      notes,
-      known_tasks,
-      unknown_tasks,
-      task_selection_type,
-      weekly_schedule
-    )
-  `)
+        email,
+        subscriptions (
+          id,
+          is_active,
+          start_date,
+          end_date,
+          subject_count,
+          plan:subscription_plans (
+            id,
+            name,
+            duration,
+            price,
+            subject_count,
+            features
+          )
+        ),
+        user_plans (
+          id,
+          subject_id,
+          target_score,
+          duration,
+          study_hours,
+          goals,
+          notes,
+          known_tasks,
+          unknown_tasks,
+          task_selection_type,
+          weekly_schedule
+        )
+      `)
 
-      if (!usersError && usersData) setUsers(usersData as User[])
+    if (!usersError && usersData) setUsers(usersData as User[])
 
-      // Предметы
-      const { data: subjectsData, error: subjectsError } = await supabase.from("subjects").select("*")
-      if (!subjectsError && subjectsData) {
-        setSubjects(subjectsData as Subject[])
-        if (!selectedSubject && subjectsData.length > 0) setSelectedSubject(subjectsData[0].id)
-      }
+    // Предметы
+    const { data: subjectsData, error: subjectsError } = await supabase
+      .from("subjects")
+      .select("*")
 
-      // Задания ЕГЭ
-      const { data: tasksData, error: tasksError } = await supabase.from("tasks").select("*")
-      if (!tasksError && tasksData) {
-        const tasksBySubject: Record<string, Task[]> = {}
-        (tasksData as Task[]).forEach((task) => {
-          if (!tasksBySubject[task.subject_id]) tasksBySubject[task.subject_id] = []
-          tasksBySubject[task.subject_id].push(task)
-        })
-        setEgeTasks(tasksBySubject)
+    if (!subjectsError && subjectsData) {
+      setSubjects(subjectsData as Subject[])
+      if (!selectedSubject && subjectsData.length > 0) {
+        setSelectedSubject(subjectsData[0].id)
       }
     }
 
-    fetchData()
-  }, [])
+    // Задания ЕГЭ
+    const { data: tasksData, error: tasksError } = await supabase
+      .from("tasks")
+      .select("*")
+
+    if (!tasksError && tasksData) {
+      const tasksBySubject: Record<string, Task[]> = {}
+      (tasksData as Task[]).forEach((task) => {
+        if (!tasksBySubject[task.subject_id]) {
+          tasksBySubject[task.subject_id] = []
+        }
+        tasksBySubject[task.subject_id].push(task)
+      })
+      setEgeTasks(tasksBySubject)
+    }
+  }
+
+  fetchData()
+}, [])
 
   const filteredUsers = users.filter((user) => {
     const matchesSearch =
