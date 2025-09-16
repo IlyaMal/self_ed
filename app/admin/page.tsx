@@ -86,24 +86,38 @@ export default function AdminPage() {
 
   // Загружаем данные из базы при старте
   useEffect(() => {
-    const fetchData = async () => {
-      // Пользователи с подписками и планами
-      const { data: usersData, error: usersError } = await supabase
+    const { data, error } = await supabase
   .from("users")
   .select(`
     id,
-    name,
     email,
     subscriptions (
-      type,
-      status,
-      expires_at,
-      subjects
+      id,
+      is_active,
+      start_date,
+      end_date,
+      subject_count,
+      plan:subscription_plans (
+        id,
+        name,
+        duration,
+        price,
+        subject_count,
+        features
+      )
     ),
     user_plans (
+      id,
       subject_id,
       target_score,
-      progress
+      duration,
+      study_hours,
+      goals,
+      notes,
+      known_tasks,
+      unknown_tasks,
+      task_selection_type,
+      weekly_schedule
     )
   `)
 
