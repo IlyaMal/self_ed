@@ -535,253 +535,266 @@ useEffect(() => {
           </TabsContent>
 
           <TabsContent value="tasks">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <FileText className="h-5 w-5" />
-                  Управление заданиями ЕГЭ
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-6">
-                  <div>
-                    <label className="text-sm font-medium mb-2 block">Выберите предмет:</label>
-                    <Select value={selectedSubject} onValueChange={setSelectedSubject}>
-                      <SelectTrigger className="w-64">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {subjects
-                          .filter((s) => s.enabled)
-                          .map((subject) => (
-                            <SelectItem key={subject.id} value={subject.id}>
-                              {subject.name}
-                            </SelectItem>
-                          ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
+  <Card>
+    <CardHeader>
+      <CardTitle className="flex items-center gap-2">
+        <FileText className="h-5 w-5" />
+        Управление заданиями ЕГЭ
+      </CardTitle>
+    </CardHeader>
+    <CardContent>
+      <div className="space-y-6">
+        {/* Выбор предмета */}
+        <div>
+          <label className="text-sm font-medium mb-2 block">Выберите предмет:</label>
+          <Select value={selectedSubject} onValueChange={setSelectedSubject}>
+            <SelectTrigger className="w-64">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {subjects
+                .filter((s) => s.enabled)
+                .map((subject) => (
+                  <SelectItem key={subject.id} value={subject.id}>
+                    {subject.name}
+                  </SelectItem>
+                ))}
+            </SelectContent>
+          </Select>
+        </div>
 
-                  <div className="flex gap-2 p-4 bg-muted rounded-lg">
-                    <Input
-                      placeholder="Название нового задания..."
-                      value={newTaskName}
-                      onChange={(e) => setNewTaskName(e.target.value)}
-                      className="flex-1"
-                    />
-                    <Button onClick={handleAddTask} disabled={!newTaskName.trim()}>
-                      <Plus className="w-4 h-4 mr-2" />
-                      Добавить задание
-                    </Button>
-                  </div>
+        {/* Добавление нового задания */}
+        <div className="flex gap-2 p-4 bg-muted rounded-lg">
+          <Input
+            placeholder="Название нового задания..."
+            value={newTaskName}
+            onChange={(e) => setNewTaskName(e.target.value)}
+            className="flex-1"
+          />
+          <Button onClick={handleAddTask} disabled={!newTaskName.trim()}>
+            <Plus className="w-4 h-4 mr-2" />
+            Добавить задание
+          </Button>
+        </div>
 
-                  <div className="rounded-md border">
-                    <Table>
-                      <TableHeader>
-                        <TableRow>
-                          <TableHead>№</TableHead>
-                          <TableHead>Название задания</TableHead>
-                          <TableHead>Теория</TableHead>
-                          <TableHead>Практика</TableHead>
-                          <TableHead>Действия</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {(egeTasks[selectedSubject as keyof typeof egeTasks] || []).map((task) => (
-                          <TableRow key={task.id}>
-                            <TableCell className="font-medium">{task.id}</TableCell>
-                            <TableCell>
-                              {editingTask?.id === task.id && editingTask.field === "name" ? (
-                                <div className="flex gap-2">
-                                  <Input
-                                    value={editingTask.value}
-                                    onChange={(e) => setEditingTask({ ...editingTask, value: e.target.value })}
-                                    className="flex-1"
-                                  />
-                                  <Button
-                                    size="sm"
-                                    onClick={() =>
-                                      handleUpdateTaskMaterial(selectedSubject, task.id, "name", editingTask.value)
-                                    }
-                                  >
-                                    ✓
-                                  </Button>
-                                  <Button size="sm" variant="outline" onClick={handleCancelEditing}>
-                                    ✕
-                                  </Button>
-                                </div>
-                              ) : (
-                                <div className="flex items-center gap-2">
-                                  <span>{task.name}</span>
-                                  <Button
-                                    size="sm"
-                                    variant="ghost"
-                                    onClick={() => handleStartEditing(task.id, "name", task.name)}
-                                  >
-                                    <Edit className="w-3 h-3" />
-                                  </Button>
-                                </div>
-                              )}
-                            </TableCell>
-                            <TableCell>
-                              <div className="space-y-2">
-                                {task.theory.map((link, index) => (
-                                  <div key={index} className="flex items-center gap-2">
-                                    {editingTask?.id === task.id &&
-                                    editingTask.field === "theory" &&
-                                    editingTask.linkIndex === index ? (
-                                      <div className="flex gap-2 flex-1">
-                                        <Input
-                                          value={editingTask.value}
-                                          onChange={(e) => setEditingTask({ ...editingTask, value: e.target.value })}
-                                          placeholder="Ссылка на теорию"
-                                          className="flex-1"
-                                        />
-                                        <Button
-                                          size="sm"
-                                          onClick={() =>
-                                            handleUpdateTaskMaterial(
-                                              selectedSubject,
-                                              task.id,
-                                              "theory",
-                                              editingTask.value,
-                                              index,
-                                            )
-                                          }
-                                        >
-                                          ✓
-                                        </Button>
-                                        <Button size="sm" variant="outline" onClick={handleCancelEditing}>
-                                          ✕
-                                        </Button>
-                                      </div>
-                                    ) : (
-                                      <>
-                                        <Badge variant="outline" className="text-green-700 bg-green-50">
-                                          <LinkIcon className="w-3 h-3 mr-1" />
-                                          Теория {index + 1}
-                                        </Badge>
-                                        <Button
-                                          size="sm"
-                                          variant="ghost"
-                                          onClick={() => handleStartEditing(task.id, "theory", link, index)}
-                                        >
-                                          <Edit className="w-3 h-3" />
-                                        </Button>
-                                        <Button
-                                          size="sm"
-                                          variant="ghost"
-                                          onClick={() => handleDeleteLink(task.id, "theory", index)}
-                                        >
-                                          <Trash2 className="w-3 h-3" />
-                                        </Button>
-                                      </>
-                                    )}
-                                  </div>
-                                ))}
-                                <Button
-                                  size="sm"
-                                  variant="outline"
-                                  onClick={() => handleAddLink(task.id, "theory")}
-                                  className="w-full"
-                                >
-                                  <Plus className="w-3 h-3 mr-1" />
-                                  Добавить ссылку на теорию
-                                </Button>
-                              </div>
-                            </TableCell>
-                            <TableCell>
-                              <div className="space-y-2">
-                                {task.practice.map((link, index) => (
-                                  <div key={index} className="flex items-center gap-2">
-                                    {editingTask?.id === task.id &&
-                                    editingTask.field === "practice" &&
-                                    editingTask.linkIndex === index ? (
-                                      <div className="flex gap-2 flex-1">
-                                        <Input
-                                          value={editingTask.value}
-                                          onChange={(e) => setEditingTask({ ...editingTask, value: e.target.value })}
-                                          placeholder="Ссылка на практику"
-                                          className="flex-1"
-                                        />
-                                        <Button
-                                          size="sm"
-                                          onClick={() =>
-                                            handleUpdateTaskMaterial(
-                                              selectedSubject,
-                                              task.id,
-                                              "practice",
-                                              editingTask.value,
-                                              index,
-                                            )
-                                          }
-                                        >
-                                          ✓
-                                        </Button>
-                                        <Button size="sm" variant="outline" onClick={handleCancelEditing}>
-                                          ✕
-                                        </Button>
-                                      </div>
-                                    ) : (
-                                      <>
-                                        <Badge variant="outline" className="text-blue-700 bg-blue-50">
-                                          <LinkIcon className="w-3 h-3 mr-1" />
-                                          Практика {index + 1}
-                                        </Badge>
-                                        <Button
-                                          size="sm"
-                                          variant="ghost"
-                                          onClick={() => handleStartEditing(task.id, "practice", link, index)}
-                                        >
-                                          <Edit className="w-3 h-3" />
-                                        </Button>
-                                        <Button
-                                          size="sm"
-                                          variant="ghost"
-                                          onClick={() => handleDeleteLink(task.id, "practice", index)}
-                                        >
-                                          <Trash2 className="w-3 h-3" />
-                                        </Button>
-                                      </>
-                                    )}
-                                  </div>
-                                ))}
-                                <Button
-                                  size="sm"
-                                  variant="outline"
-                                  onClick={() => handleAddLink(task.id, "practice")}
-                                  className="w-full"
-                                >
-                                  <Plus className="w-3 h-3 mr-1" />
-                                  Добавить ссылку на практику
-                                </Button>
-                              </div>
-                            </TableCell>
-                            <TableCell>
-                              <div className="flex gap-2">
-                                <Button size="sm" variant="destructive" onClick={() => handleDeleteTask(task.id)}>
-                                  <Trash2 className="w-3 h-3 mr-1" />
-                                  Удалить
-                                </Button>
-                              </div>
-                            </TableCell>
-                          </TableRow>
-                        ))}
-                      </TableBody>
-                    </Table>
-                  </div>
+        {/* Таблица заданий */}
+        <div className="rounded-md border">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>№</TableHead>
+                <TableHead>Название задания</TableHead>
+                <TableHead>Теория</TableHead>
+                <TableHead>Практика</TableHead>
+                <TableHead>Действия</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {(egeTasks[selectedSubject as keyof typeof egeTasks] || []).map((task) => (
+                <TableRow key={task.id}>
+                  {/* ID */}
+                  <TableCell className="font-medium">{task.id}</TableCell>
 
-                  <Alert>
-                    <AlertDescription>
-                      Здесь вы можете управлять заданиями ЕГЭ: добавлять новые задания, редактировать их названия,
-                      добавлять множественные ссылки на теоретические и практические материалы. Эти задания будут
-                      доступны для выбора при создании планов подготовки.
-                    </AlertDescription>
-                  </Alert>
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
+                  {/* Название */}
+                  <TableCell>
+                    {editingTask?.id === task.id && editingTask.field === "name" ? (
+                      <div className="flex gap-2">
+                        <Input
+                          value={editingTask.value}
+                          onChange={(e) => setEditingTask({ ...editingTask, value: e.target.value })}
+                          className="flex-1"
+                        />
+                        <Button
+                          size="sm"
+                          onClick={() =>
+                            handleUpdateTaskMaterial(selectedSubject, task.id, "name", editingTask.value)
+                          }
+                        >
+                          ✓
+                        </Button>
+                        <Button size="sm" variant="outline" onClick={handleCancelEditing}>
+                          ✕
+                        </Button>
+                      </div>
+                    ) : (
+                      <div className="flex items-center gap-2">
+                        <span>{task.name}</span>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => handleStartEditing(task.id, "name", task.name)}
+                        >
+                          <Edit className="w-3 h-3" />
+                        </Button>
+                      </div>
+                    )}
+                  </TableCell>
+
+                  {/* Теория */}
+                  <TableCell>
+                    <div className="space-y-2">
+                      {task.theory_links?.map((link, index) => (
+                        <div key={index} className="flex items-center gap-2">
+                          {editingTask?.id === task.id &&
+                          editingTask.field === "theory" &&
+                          editingTask.linkIndex === index ? (
+                            <div className="flex gap-2 flex-1">
+                              <Input
+                                value={editingTask.value}
+                                onChange={(e) => setEditingTask({ ...editingTask, value: e.target.value })}
+                                placeholder="Ссылка на теорию"
+                                className="flex-1"
+                              />
+                              <Button
+                                size="sm"
+                                onClick={() =>
+                                  handleUpdateTaskMaterial(
+                                    selectedSubject,
+                                    task.id,
+                                    "theory_links",
+                                    editingTask.value,
+                                    index,
+                                  )
+                                }
+                              >
+                                ✓
+                              </Button>
+                              <Button size="sm" variant="outline" onClick={handleCancelEditing}>
+                                ✕
+                              </Button>
+                            </div>
+                          ) : (
+                            <>
+                              <Badge variant="outline" className="text-green-700 bg-green-50">
+                                <LinkIcon className="w-3 h-3 mr-1" />
+                                Теория {index + 1}
+                              </Badge>
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                onClick={() => handleStartEditing(task.id, "theory", link, index)}
+                              >
+                                <Edit className="w-3 h-3" />
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                onClick={() => handleDeleteLink(task.id, "theory_links", index)}
+                              >
+                                <Trash2 className="w-3 h-3" />
+                              </Button>
+                            </>
+                          )}
+                        </div>
+                      ))}
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => handleAddLink(task.id, "theory_links")}
+                        className="w-full"
+                      >
+                        <Plus className="w-3 h-3 mr-1" />
+                        Добавить ссылку на теорию
+                      </Button>
+                    </div>
+                  </TableCell>
+
+                  {/* Практика */}
+                  <TableCell>
+                    <div className="space-y-2">
+                      {task.practice_links?.map((link, index) => (
+                        <div key={index} className="flex items-center gap-2">
+                          {editingTask?.id === task.id &&
+                          editingTask.field === "practice" &&
+                          editingTask.linkIndex === index ? (
+                            <div className="flex gap-2 flex-1">
+                              <Input
+                                value={editingTask.value}
+                                onChange={(e) => setEditingTask({ ...editingTask, value: e.target.value })}
+                                placeholder="Ссылка на практику"
+                                className="flex-1"
+                              />
+                              <Button
+                                size="sm"
+                                onClick={() =>
+                                  handleUpdateTaskMaterial(
+                                    selectedSubject,
+                                    task.id,
+                                    "practice_links",
+                                    editingTask.value,
+                                    index,
+                                  )
+                                }
+                              >
+                                ✓
+                              </Button>
+                              <Button size="sm" variant="outline" onClick={handleCancelEditing}>
+                                ✕
+                              </Button>
+                            </div>
+                          ) : (
+                            <>
+                              <Badge variant="outline" className="text-blue-700 bg-blue-50">
+                                <LinkIcon className="w-3 h-3 mr-1" />
+                                Практика {index + 1}
+                              </Badge>
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                onClick={() => handleStartEditing(task.id, "practice", link, index)}
+                              >
+                                <Edit className="w-3 h-3" />
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                onClick={() => handleDeleteLink(task.id, "practice_links", index)}
+                              >
+                                <Trash2 className="w-3 h-3" />
+                              </Button>
+                            </>
+                          )}
+                        </div>
+                      ))}
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => handleAddLink(task.id, "practice_links")}
+                        className="w-full"
+                      >
+                        <Plus className="w-3 h-3 mr-1" />
+                        Добавить ссылку на практику
+                      </Button>
+                    </div>
+                  </TableCell>
+
+                  {/* Действия */}
+                  <TableCell>
+                    <div className="flex gap-2">
+                      <Button size="sm" variant="destructive" onClick={() => handleDeleteTask(task.id)}>
+                        <Trash2 className="w-3 h-3 mr-1" />
+                        Удалить
+                      </Button>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </div>
+
+        <Alert>
+          <AlertDescription>
+            Здесь вы можете управлять заданиями ЕГЭ: добавлять новые задания, редактировать их названия,
+            добавлять множественные ссылки на теоретические и практические материалы. Эти задания будут
+            доступны для выбора при создании планов подготовки.
+          </AlertDescription>
+        </Alert>
+      </div>
+    </CardContent>
+  </Card>
+</TabsContent>
+
         </Tabs>
       </div>
     </div>
