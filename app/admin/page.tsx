@@ -142,15 +142,22 @@ useEffect(() => {
       .select("*")
 
     if (!tasksError && tasksData) {
-      const tasksBySubject: Record<string, Task[]> = {}
-      (tasksData as Task[]).forEach((task) => {
-        if (!tasksBySubject[task.subject_id]) {
-          tasksBySubject[task.subject_id] = []
-        }
-        tasksBySubject[task.subject_id].push(task)
-      })
-      setEgeTasks(tasksBySubject)
+  const tasksBySubject: Record<string, Task[]> = {}
+  (tasksData as Task[]).forEach((task) => {
+    // тут фиксим null → []
+    const normalizedTask = {
+      ...task,
+      theory_links: task.theory_links || [],
+      practice_links: task.practice_links || [],
     }
+
+    if (!tasksBySubject[normalizedTask.subject_id]) {
+      tasksBySubject[normalizedTask.subject_id] = []
+    }
+    tasksBySubject[normalizedTask.subject_id].push(normalizedTask)
+  })
+  setEgeTasks(tasksBySubject)
+}
   }
 
   fetchData()
