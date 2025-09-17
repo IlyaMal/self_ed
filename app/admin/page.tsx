@@ -573,7 +573,7 @@ const { data: tasksData, error: tasksError } = await supabase.from("tasks").sele
             Добавить задание
           </Button>
         </div>
-        <pre>{JSON.stringify(egeTasks, null, 2)}</pre>
+        <pre>{JSON.stringify(taskData, null, 2)}</pre>
 
         {/* Таблица заданий */}
         <div className="rounded-md border">
