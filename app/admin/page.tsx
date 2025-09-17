@@ -137,9 +137,6 @@ useEffect(() => {
     }
 
     // Задания ЕГЭ
-    const { data: tasksData, error: tasksError } = await supabase
-      .from("tasks")
-      .select("*")
 
     // После загрузки tasksData
 const { data: tasksData, error: tasksError } = await supabase.from("tasks").select("*")
