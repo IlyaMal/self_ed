@@ -142,28 +142,16 @@ useEffect(() => {
       .select("*")
 
     // После загрузки tasksData
-if (!tasksError && tasksData) {
-  const tasksBySubject: Record<string, Task[]> = {}
-  (tasksData as Task[]).forEach((task) => {
-    const normalizedTask = {
-      ...task,
-      theory_links: task.theory_links || [],
-      practice_links: task.practice_links || [],
+const { data: tasksData, error: tasksError } = await supabase.from("tasks").select("*")
+      if (!tasksError && tasksData) {
+        const tasksBySubject: Record<string, Task[]> = {}
+        (tasksData as Task[]).forEach((task) => {
+          if (!tasksBySubject[task.subject_id]) tasksBySubject[task.subject_id] = []
+          tasksBySubject[task.subject_id].push(task)
+        })
+        setEgeTasks(tasksBySubject)
+      }
     }
-    if (!tasksBySubject[normalizedTask.subject_id]) {
-      tasksBySubject[normalizedTask.subject_id] = []
-    }
-    tasksBySubject[normalizedTask.subject_id].push(normalizedTask)
-  })
-  setEgeTasks(tasksBySubject)
-
-  // если ещё не выбран предмет, то выбираем первый из тех, что есть в задачах
-  if (!selectedSubject && Object.keys(tasksBySubject).length > 0) {
-    setSelectedSubject(Object.keys(tasksBySubject)[0])
-  }
-}
-
-  }
 
   fetchData()
 }, [])
@@ -588,6 +576,7 @@ if (!tasksError && tasksData) {
             Добавить задание
           </Button>
         </div>
+        <pre>{JSON.stringify(egeTasks, null, 2)}</pre>
 
         {/* Таблица заданий */}
         <div className="rounded-md border">
