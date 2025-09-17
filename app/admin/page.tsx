@@ -140,6 +140,7 @@ useEffect(() => {
 
     // После загрузки tasksData
 const { data: tasksData, error: tasksError } = await supabase.from("tasks").select("*")
+    
       if (!tasksError && tasksData) {
         const tasksBySubject: Record<string, Task[]> = {}
         (tasksData as Task[]).forEach((task) => {
@@ -148,6 +149,8 @@ const { data: tasksData, error: tasksError } = await supabase.from("tasks").sele
         })
         setEgeTasks(tasksBySubject)
       }
+        console.log("📌 Subjects:", subjectsData)
+    console.log("📌 Tasks:", tasksData)
     }
 
   fetchData()
