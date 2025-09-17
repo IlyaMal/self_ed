@@ -141,23 +141,28 @@ useEffect(() => {
       .from("tasks")
       .select("*")
 
-    if (!tasksError && tasksData) {
+    // После загрузки tasksData
+if (!tasksError && tasksData) {
   const tasksBySubject: Record<string, Task[]> = {}
   (tasksData as Task[]).forEach((task) => {
-    // тут фиксим null → []
     const normalizedTask = {
       ...task,
       theory_links: task.theory_links || [],
       practice_links: task.practice_links || [],
     }
-
     if (!tasksBySubject[normalizedTask.subject_id]) {
       tasksBySubject[normalizedTask.subject_id] = []
     }
     tasksBySubject[normalizedTask.subject_id].push(normalizedTask)
   })
   setEgeTasks(tasksBySubject)
+
+  // если ещё не выбран предмет, то выбираем первый из тех, что есть в задачах
+  if (!selectedSubject && Object.keys(tasksBySubject).length > 0) {
+    setSelectedSubject(Object.keys(tasksBySubject)[0])
+  }
 }
+
   }
 
   fetchData()
