@@ -87,71 +87,83 @@ export default function AdminPage() {
   // Загружаем данные из базы при старте
 useEffect(() => {
   const fetchData = async () => {
-    const { data: usersData, error: usersError } = await supabase
-      .from("users")
-      .select(`
-        id,
-        email,
-        subscriptions (
+    try {
+      console.log("⚡ fetchData started")
+
+      // --- Users
+      const { data: usersData, error: usersError } = await supabase
+        .from("users")
+        .select(`
           id,
-          is_active,
-          start_date,
-          end_date,
-          subject_count,
-          plan:subscription_plans (
+          email,
+          subscriptions (
             id,
-            name,
-            duration,
-            price,
+            is_active,
+            start_date,
+            end_date,
             subject_count,
-            features
+            plan:subscription_plans (
+              id,
+              name,
+              duration,
+              price,
+              subject_count,
+              features
+            )
+          ),
+          user_plans (
+            id,
+            subject_id,
+            target_score,
+            duration,
+            study_hours,
+            goals,
+            notes,
+            known_tasks,
+            unknown_tasks,
+            task_selection_type,
+            weekly_schedule
           )
-        ),
-        user_plans (
-          id,
-          subject_id,
-          target_score,
-          duration,
-          study_hours,
-          goals,
-          notes,
-          known_tasks,
-          unknown_tasks,
-          task_selection_type,
-          weekly_schedule
-        )
-      `)
+        `)
 
-    if (!usersError && usersData) setUsers(usersData as User[])
+      console.log("📌 usersError:", usersError)
+      console.log("📌 usersData length:", usersData?.length ?? 0)
+      if (!usersError && usersData) setUsers(usersData as User[])
 
-    // Предметы
-    const { data: subjectsData, error: subjectsError } = await supabase
-      .from("subjects")
-      .select("*")
+      // --- Subjects
+      const { data: subjectsData, error: subjectsError } = await supabase
+        .from("subjects")
+        .select("*")
 
-    if (!subjectsError && subjectsData) {
-      setSubjects(subjectsData as Subject[])
-      if (!selectedSubject && subjectsData.length > 0) {
-        setSelectedSubject(subjectsData[0].id)
+      console.log("📌 subjectsError:", subjectsError)
+      console.log("📌 subjectsData:", subjectsData)
+      if (!subjectsError && subjectsData) {
+        setSubjects(subjectsData as Subject[])
+        if (!selectedSubject && subjectsData.length > 0) {
+          setSelectedSubject(subjectsData[0].id)
+        }
       }
-    }
 
-    // Задания ЕГЭ
+      // --- Tasks
+      const { data: tasksData, error: tasksError } = await supabase.from("tasks").select("*")
+      console.log("📌 tasksError:", tasksError)
+      console.log("📌 tasksData length:", tasksData?.length ?? 0)
 
-    // После загрузки tasksData
-const { data: tasksData, error: tasksError } = await supabase.from("tasks").select("*")
-    
       if (!tasksError && tasksData) {
         const tasksBySubject: Record<string, Task[]> = {}
-        (tasksData as Task[]).forEach((task) => {
+        ;(tasksData as Task[]).forEach((task) => {
           if (!tasksBySubject[task.subject_id]) tasksBySubject[task.subject_id] = []
           tasksBySubject[task.subject_id].push(task)
         })
+        console.log("📌 Grouped tasksBySubject keys:", Object.keys(tasksBySubject))
         setEgeTasks(tasksBySubject)
       }
-        console.log("📌 Subjects:", subjectsData)
-    console.log("📌 Tasks:", tasksData)
+
+      console.log("✅ fetchData finished")
+    } catch (err) {
+      console.error("❌ fetchData threw:", err)
     }
+  }
 
   fetchData()
 }, [])
