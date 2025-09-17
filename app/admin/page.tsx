@@ -631,142 +631,214 @@ useEffect(() => {
                   </TableCell>
 
                   {/* Теория */}
-                  <TableCell>
-                    <div className="space-y-2">
-                      {task.theory_links?.map((link, index) => (
-                        <div key={index} className="flex items-center gap-2">
-                          {editingTask?.id === task.id &&
-                          editingTask.field === "theory" &&
-                          editingTask.linkIndex === index ? (
-                            <div className="flex gap-2 flex-1">
-                              <Input
-                                value={editingTask.value}
-                                onChange={(e) => setEditingTask({ ...editingTask, value: e.target.value })}
-                                placeholder="Ссылка на теорию"
-                                className="flex-1"
-                              />
-                              <Button
-                                size="sm"
-                                onClick={() =>
-                                  handleUpdateTaskMaterial(
-                                    selectedSubject,
-                                    task.id,
-                                    "theory_links",
-                                    editingTask.value,
-                                    index,
-                                  )
-                                }
-                              >
-                                ✓
-                              </Button>
-                              <Button size="sm" variant="outline" onClick={handleCancelEditing}>
-                                ✕
-                              </Button>
-                            </div>
-                          ) : (
-                            <>
-                              <Badge variant="outline" className="text-green-700 bg-green-50">
-                                <LinkIcon className="w-3 h-3 mr-1" />
-                                Теория {index + 1}
-                              </Badge>
-                              <Button
-                                size="sm"
-                                variant="ghost"
-                                onClick={() => handleStartEditing(task.id, "theory", link, index)}
-                              >
-                                <Edit className="w-3 h-3" />
-                              </Button>
-                              <Button
-                                size="sm"
-                                variant="ghost"
-                                onClick={() => handleDeleteLink(task.id, "theory_links", index)}
-                              >
-                                <Trash2 className="w-3 h-3" />
-                              </Button>
-                            </>
-                          )}
-                        </div>
-                      ))}
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => handleAddLink(task.id, "theory_links")}
-                        className="w-full"
-                      >
-                        <Plus className="w-3 h-3 mr-1" />
-                        Добавить ссылку на теорию
-                      </Button>
-                    </div>
-                  </TableCell>
+<TableCell>
+  <div className="space-y-2">
+    {task.theory_links?.map((link, index) => (
+      <div key={index} className="flex items-center gap-2">
+        {editingTask?.id === task.id &&
+        editingTask.field === "theory" &&
+        editingTask.linkIndex === index ? (
+          <div className="flex gap-2 flex-1">
+            <Input
+              value={editingTask.value}
+              onChange={(e) => setEditingTask({ ...editingTask, value: e.target.value })}
+              placeholder="Ссылка на теорию"
+              className="flex-1"
+            />
+            <Button
+              size="sm"
+              onClick={() =>
+                handleUpdateTaskMaterial(
+                  selectedSubject,
+                  task.id,
+                  "theory",
+                  editingTask.value,
+                  index,
+                )
+              }
+            >
+              ✓
+            </Button>
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => {
+                // Если это новая пустая ссылка и нажали ✕ — убираем её из локального массива
+                if (!link) {
+                  setEgeTasks((prev) => ({
+                    ...prev,
+                    [selectedSubject]: prev[selectedSubject].map((t) =>
+                      t.id === task.id
+                        ? {
+                            ...t,
+                            theory_links: t.theory_links.filter((_, i) => i !== index),
+                          }
+                        : t
+                    ),
+                  }))
+                }
+                handleCancelEditing()
+              }}
+            >
+              ✕
+            </Button>
+          </div>
+        ) : (
+          <>
+            <Badge variant="outline" className="text-green-700 bg-green-50">
+              <LinkIcon className="w-3 h-3 mr-1" />
+              Теория {index + 1}
+            </Badge>
+            <Button
+              size="sm"
+              variant="ghost"
+              onClick={() => handleStartEditing(task.id, "theory", link, index)}
+            >
+              <Edit className="w-3 h-3" />
+            </Button>
+            <Button
+              size="sm"
+              variant="ghost"
+              onClick={() => handleDeleteLink(task.id, "theory", index)}
+            >
+              <Trash2 className="w-3 h-3" />
+            </Button>
+          </>
+        )}
+      </div>
+    ))}
+    <Button
+      size="sm"
+      variant="outline"
+      onClick={() => {
+        // Добавляем пустую ссылку только в state
+        setEgeTasks((prev) => ({
+          ...prev,
+          [selectedSubject]: prev[selectedSubject].map((t) =>
+            t.id === task.id
+              ? { ...t, theory_links: [...t.theory_links, ""] }
+              : t
+          ),
+        }))
+        // Открываем режим редактирования сразу для новой ссылки
+        setEditingTask({
+          id: task.id,
+          field: "theory",
+          value: "",
+          linkIndex: task.theory_links.length,
+        })
+      }}
+      className="w-full"
+    >
+      <Plus className="w-3 h-3 mr-1" />
+      Добавить ссылку на теорию
+    </Button>
+  </div>
+</TableCell>
 
-                  {/* Практика */}
-                  <TableCell>
-                    <div className="space-y-2">
-                      {task.practice_links?.map((link, index) => (
-                        <div key={index} className="flex items-center gap-2">
-                          {editingTask?.id === task.id &&
-                          editingTask.field === "practice" &&
-                          editingTask.linkIndex === index ? (
-                            <div className="flex gap-2 flex-1">
-                              <Input
-                                value={editingTask.value}
-                                onChange={(e) => setEditingTask({ ...editingTask, value: e.target.value })}
-                                placeholder="Ссылка на практику"
-                                className="flex-1"
-                              />
-                              <Button
-                                size="sm"
-                                onClick={() =>
-                                  handleUpdateTaskMaterial(
-                                    selectedSubject,
-                                    task.id,
-                                    "practice_links",
-                                    editingTask.value,
-                                    index,
-                                  )
-                                }
-                              >
-                                ✓
-                              </Button>
-                              <Button size="sm" variant="outline" onClick={handleCancelEditing}>
-                                ✕
-                              </Button>
-                            </div>
-                          ) : (
-                            <>
-                              <Badge variant="outline" className="text-blue-700 bg-blue-50">
-                                <LinkIcon className="w-3 h-3 mr-1" />
-                                Практика {index + 1}
-                              </Badge>
-                              <Button
-                                size="sm"
-                                variant="ghost"
-                                onClick={() => handleStartEditing(task.id, "practice", link, index)}
-                              >
-                                <Edit className="w-3 h-3" />
-                              </Button>
-                              <Button
-                                size="sm"
-                                variant="ghost"
-                                onClick={() => handleDeleteLink(task.id, "practice_links", index)}
-                              >
-                                <Trash2 className="w-3 h-3" />
-                              </Button>
-                            </>
-                          )}
-                        </div>
-                      ))}
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => handleAddLink(task.id, "practice_links")}
-                        className="w-full"
-                      >
-                        <Plus className="w-3 h-3 mr-1" />
-                        Добавить ссылку на практику
-                      </Button>
-                    </div>
-                  </TableCell>
+{/* Практика */}
+<TableCell>
+  <div className="space-y-2">
+    {task.practice_links?.map((link, index) => (
+      <div key={index} className="flex items-center gap-2">
+        {editingTask?.id === task.id &&
+        editingTask.field === "practice" &&
+        editingTask.linkIndex === index ? (
+          <div className="flex gap-2 flex-1">
+            <Input
+              value={editingTask.value}
+              onChange={(e) => setEditingTask({ ...editingTask, value: e.target.value })}
+              placeholder="Ссылка на практику"
+              className="flex-1"
+            />
+            <Button
+              size="sm"
+              onClick={() =>
+                handleUpdateTaskMaterial(
+                  selectedSubject,
+                  task.id,
+                  "practice",
+                  editingTask.value,
+                  index,
+                )
+              }
+            >
+              ✓
+            </Button>
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => {
+                if (!link) {
+                  setEgeTasks((prev) => ({
+                    ...prev,
+                    [selectedSubject]: prev[selectedSubject].map((t) =>
+                      t.id === task.id
+                        ? {
+                            ...t,
+                            practice_links: t.practice_links.filter((_, i) => i !== index),
+                          }
+                        : t
+                    ),
+                  }))
+                }
+                handleCancelEditing()
+              }}
+            >
+              ✕
+            </Button>
+          </div>
+        ) : (
+          <>
+            <Badge variant="outline" className="text-blue-700 bg-blue-50">
+              <LinkIcon className="w-3 h-3 mr-1" />
+              Практика {index + 1}
+            </Badge>
+            <Button
+              size="sm"
+              variant="ghost"
+              onClick={() => handleStartEditing(task.id, "practice", link, index)}
+            >
+              <Edit className="w-3 h-3" />
+            </Button>
+            <Button
+              size="sm"
+              variant="ghost"
+              onClick={() => handleDeleteLink(task.id, "practice", index)}
+            >
+              <Trash2 className="w-3 h-3" />
+            </Button>
+          </>
+        )}
+      </div>
+    ))}
+    <Button
+      size="sm"
+      variant="outline"
+      onClick={() => {
+        setEgeTasks((prev) => ({
+          ...prev,
+          [selectedSubject]: prev[selectedSubject].map((t) =>
+            t.id === task.id
+              ? { ...t, practice_links: [...t.practice_links, ""] }
+              : t
+          ),
+        }))
+        setEditingTask({
+          id: task.id,
+          field: "practice",
+          value: "",
+          linkIndex: task.practice_links.length,
+        })
+      }}
+      className="w-full"
+    >
+      <Plus className="w-3 h-3 mr-1" />
+      Добавить ссылку на практику
+    </Button>
+  </div>
+</TableCell>
+
 
                   {/* Действия */}
                   <TableCell>
