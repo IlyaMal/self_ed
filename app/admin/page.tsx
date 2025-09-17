@@ -292,15 +292,30 @@ useEffect(() => {
     handleUpdateTaskMaterial(selectedSubject, taskId, field, updatedLinks[updatedLinks.length - 1])
   }
 
-  const handleDeleteLink = (taskId: number, field: "theory" | "practice", linkIndex: number) => {
-    const task = egeTasks[selectedSubject]?.find((t) => t.id === taskId)
-    if (!task) return
+  const handleDeleteLink = async (taskId: number, field: "theory" | "practice", linkIndex: number) => {
+  const task = egeTasks[selectedSubject]?.find((t) => t.id === taskId)
+  if (!task) return
 
-    const updatedLinks = task[field === "theory" ? "theory_links" : "practice_links"].filter(
-      (_, i) => i !== linkIndex,
-    )
-    handleUpdateTaskMaterial(selectedSubject, taskId, field, updatedLinks[0] || "")
+  const key = field === "theory" ? "theory_links" : "practice_links"
+  const updatedLinks = task[key].filter((_, i) => i !== linkIndex)
+
+  const { data, error } = await supabase
+    .from("tasks")
+    .update({ [key]: updatedLinks })
+    .eq("id", taskId)
+    .select()
+    .single()
+
+  if (!error && data) {
+    setEgeTasks((prev) => ({
+      ...prev,
+      [selectedSubject]: prev[selectedSubject].map((t) => (t.id === taskId ? data : t)),
+    }))
+  } else {
+    console.error("Failed to delete link:", error)
   }
+}
+
 
   const getStatusBadge = (status: string) => {
     switch (status) {
