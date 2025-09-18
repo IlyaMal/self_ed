@@ -49,7 +49,7 @@ export default function SubscriptionPage() {
 
       // Получаем все тарифные планы
       const { data: plansData, error: plansError } = await supabase
-        .from("plans")
+        .from("subscription_plans")
         .select("*")
         .order("subject_count", { ascending: true })
 
