@@ -1,16 +1,16 @@
 "use client"
 
-import type React from "react"
-
 import { useState } from "react"
+import { useRouter } from "next/navigation"
+import Link from "next/link"
+import { supabase } from "@/lib/supabase"
+
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { BookOpen, Eye, EyeOff, Loader2 } from "lucide-react"
-import Link from "next/link"
-import { useRouter } from "next/navigation"
 
 export default function LoginPage() {
   const [email, setEmail] = useState("")
@@ -22,30 +22,28 @@ export default function LoginPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    setIsLoading(true)
     setError("")
+    setIsLoading(true)
 
-    // Заглушка для аутентификации
     try {
-      await new Promise((resolve) => setTimeout(resolve, 1000)) // Имитация запроса
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      })
 
-      if (email === "test@example.com" && password === "password") {
-        // Сохраняем токен в localStorage (заглушка)
-        localStorage.setItem("auth_token", "mock_token_12345")
-        localStorage.setItem(
-          "user_data",
-          JSON.stringify({
-            id: "1",
-            email: email,
-            name: "Тестовый пользователь",
-          }),
-        )
+      if (error) {
+        setError(error.message)
+        return
+      }
+
+      // session хранится автоматически, user доступен через supabase.auth.getUser()
+      if (data.user) {
         router.push("/dashboard")
       } else {
-        setError("Неверный email или пароль")
+        setError("Не удалось войти. Проверьте email и пароль.")
       }
-    } catch (err) {
-      setError("Произошла ошибка при входе")
+    } catch (err: any) {
+      setError("Ошибка входа: " + err.message)
     } finally {
       setIsLoading(false)
     }
@@ -131,13 +129,6 @@ export default function LoginPage() {
                   Зарегистрироваться
                 </Link>
               </p>
-            </div>
-
-            {/* Демо данные */}
-            <div className="mt-4 p-3 bg-muted rounded-lg">
-              <p className="text-sm text-muted-foreground mb-2">Для демонстрации используйте:</p>
-              <p className="text-xs font-mono">Email: test@example.com</p>
-              <p className="text-xs font-mono">Пароль: password</p>
             </div>
           </CardContent>
         </Card>
