@@ -131,7 +131,7 @@ export default function SubscriptionPage() {
                   </p>
                 </div>
                 <Badge variant={subscription?.isActive ? "secondary" : "destructive"}>
-                  {subscription.isActive ? "Активна" : "Неактивна"}
+                  {subscription?.isActive ? "Активна" : "Неактивна"}
                 </Badge>
               </div>
 
