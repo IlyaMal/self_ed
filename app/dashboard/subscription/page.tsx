@@ -39,7 +39,7 @@ export default function SubscriptionPage() {
         .from("subscriptions")
         .select("*")
         .eq("user_id", user.id)
-        .single()
+        .maybeSingle()
 
       if (subError) {
         console.error("Ошибка получения подписки:", subError)
