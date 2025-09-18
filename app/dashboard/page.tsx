@@ -246,7 +246,18 @@ export default function DashboardPage() {
                   </Button>
                 )}
               </div>
-
+{!subscription ? (
+  <Card className="text-center py-12">
+    <CardContent>
+      <AlertCircle className="h-12 w-12 text-orange-500 mx-auto mb-4" />
+      <h3 className="text-lg font-semibold mb-2">У вас нет активной подписки</h3>
+      <p className="text-muted-foreground mb-4">Чтобы пользоваться планами подготовки, оформите подписку</p>
+      <Button asChild>
+        <Link href="/dashboard/subscription">Перейти к подпискам</Link>
+      </Button>
+    </CardContent>
+  </Card>
+) : (
               {userPlans.length > 0 ? (
                 <div className="grid gap-4">
                   {userPlans.map((plan) => (
@@ -307,6 +318,7 @@ export default function DashboardPage() {
                 </Card>
               )}
             </div>
+            )}
 
             {/* Subscription Status */}
             {subscription && (
