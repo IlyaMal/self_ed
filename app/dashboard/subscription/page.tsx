@@ -9,7 +9,8 @@ import { Progress } from "@/components/ui/progress"
 import { BookOpen, ArrowLeft, Crown, Check, AlertTriangle, Shield, MessageSquare, Users } from "lucide-react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
-import { getUserData, isAuthenticated } from "@/lib/auth"
+import { supabase } from "@/lib/supabase"
+
 import {
   getUserSubscription,
   getAvailablePlans,
@@ -20,26 +21,50 @@ import {
 
 export default function SubscriptionPage() {
   const [subscription, setSubscription] = useState<Subscription | null>(null)
+  const [plans, setPlans] = useState<Subscription[]>([])
   const [loading, setLoading] = useState(true)
   const router = useRouter()
 
-  useEffect(() => {
-  async function fetchSubscription() {
-    if (!isAuthenticated()) {
-      router.push("/auth/login")
-      return
+ useEffect(() => {
+    async function fetchData() {
+      // Получаем текущего пользователя из Supabase
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) {
+        router.push("/auth/login")
+        return
+      }
+
+      // Получаем подписку пользователя
+      const { data: subData, error: subError } = await supabase
+        .from("subscriptions")
+        .select("*")
+        .eq("user_id", user.id)
+        .single()
+
+      if (subError) {
+        console.error("Ошибка получения подписки:", subError)
+      } else {
+        setSubscription(subData as Subscription)
+      }
+
+      // Получаем все тарифные планы
+      const { data: plansData, error: plansError } = await supabase
+        .from("plans")
+        .select("*")
+        .order("subject_count", { ascending: true })
+
+      if (plansError) {
+        console.error("Ошибка получения планов:", plansError)
+      } else {
+        setPlans(plansData as Subscription[])
+      }
+
+      setLoading(false)
     }
 
-    const user = getUserData()
-    if (!user) return
+    fetchData()
+  }, [router, supabase])
 
-    const userSub = await getUserSubscription(user.id) // await!
-    setSubscription(userSub)
-    setLoading(false)
-  }
-
-  fetchSubscription()
-}, [router])
 
 
   const plans = getAvailablePlans()
