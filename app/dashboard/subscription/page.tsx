@@ -67,8 +67,6 @@ export default function SubscriptionPage() {
 
 
 
-  const plans = getAvailablePlans()
-
   if (loading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
