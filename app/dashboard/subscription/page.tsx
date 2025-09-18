@@ -207,7 +207,7 @@ export default function SubscriptionPage() {
                 </ul>
 
                 <div className="pt-4">
-                  {subscription?.subjectCount === plan.subjectCount && subscription.isActive ? (
+                  {subscription?.subjectCount === plan.subjectCount && subscription?.isActive ? (
                     <Button className="w-full" disabled>
                       Текущий тариф
                     </Button>
