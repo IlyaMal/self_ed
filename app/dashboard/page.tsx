@@ -48,86 +48,38 @@ export default function DashboardPage() {
   const [subscription, setSubscription] = useState<any>(null)
   const router = useRouter()
 
-  useEffect(() => {
-    if (!isAuthenticated()) {
+ useEffect(() => {
+  const fetchData = async () => {
+    // 1. Проверяем авторизацию
+    const { data: { user }, error: authError } = await supabase.auth.getUser()
+    if (authError || !user) {
       router.push("/auth/login")
       return
     }
+    setUser(user)
 
-    const userData = getUserData()
-    setUser(userData)
+    // 2. Загружаем подписку пользователя
+    const { data: subs } = await supabase
+      .from("subscriptions")
+      .select("*, plan:subscription_plans(*)")
+      .eq("user_id", user.id)
+      .eq("is_active", true)
+      .maybeSingle()
 
-    if (userData) {
-      const userSub = getUserSubscription(userData.id)
-      setSubscription(userSub)
-    }
+    setSubscription(subs || null)
 
-    const savedPlans = localStorage.getItem("user_plans")
-    if (savedPlans) {
-      setUserPlans(JSON.parse(savedPlans))
-    } else {
-      // Заглушка для демонстрации нескольких планов
-      const demoPlans: EGEPlan[] = [
-        {
-          id: "1",
-          subject: "math",
-          targetScore: 85,
-          duration: "6months",
-          progress: 35,
-          createdAt: "2024-01-15",
-          weeklySchedule: [
-            {
-              week: 1,
-              unlocked: true,
-              theory: ["Основы дифференцирования", "Правила вычисления производных"],
-              practice: ["Задачи на производные", "Тест по производным"],
-              tasks: [7, 12],
-            },
-            {
-              week: 2,
-              unlocked: true,
-              theory: ["Применение производной", "Исследование функций"],
-              practice: ["Задачи на исследование функций", "Практикум по экстремумам"],
-              tasks: [12, 8],
-            },
-            {
-              week: 3,
-              unlocked: false,
-              theory: ["Первообразная и интеграл", "Вычисление площадей"],
-              practice: ["Задачи на интегралы", "Геометрические приложения"],
-              tasks: [7, 12],
-            },
-          ],
-        },
-        {
-          id: "2",
-          subject: "physics",
-          targetScore: 78,
-          duration: "6months",
-          progress: 20,
-          createdAt: "2024-01-20",
-          weeklySchedule: [
-            {
-              week: 1,
-              unlocked: true,
-              theory: ["Кинематика", "Равномерное движение"],
-              practice: ["Задачи на движение", "Графики движения"],
-              tasks: [1, 2],
-            },
-            {
-              week: 2,
-              unlocked: false,
-              theory: ["Динамика", "Законы Ньютона"],
-              practice: ["Задачи на силы", "Применение законов Ньютона"],
-              tasks: [3, 4],
-            },
-          ],
-        },
-      ]
-      setUserPlans(demoPlans)
-      localStorage.setItem("user_plans", JSON.stringify(demoPlans))
-    }
-  }, [router])
+    // 3. Загружаем планы
+    const { data: plans } = await supabase
+      .from("user_plans")
+      .select("*")
+      .eq("user_id", user.id)
+
+    setUserPlans(plans || [])
+  }
+
+  fetchData()
+}, [])
+
 
   const handleLogout = () => {
     logout()
