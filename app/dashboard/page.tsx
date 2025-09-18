@@ -234,91 +234,95 @@ export default function DashboardPage() {
             </div>
 
             {/* Active Plans Overview */}
-            <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <h2 className="text-xl font-semibold">Активные планы подготовки</h2>
-                {canCreateNewPlan() && (
-                  <Button asChild>
-                    <Link href="/dashboard/create-plan">
-                      <Plus className="h-4 w-4 mr-2" />
-                      Добавить план
-                    </Link>
-                  </Button>
-                )}
-              </div>
-{!subscription ? (
-  <Card className="text-center py-12">
-    <CardContent>
-      <AlertCircle className="h-12 w-12 text-orange-500 mx-auto mb-4" />
-      <h3 className="text-lg font-semibold mb-2">У вас нет активной подписки</h3>
-      <p className="text-muted-foreground mb-4">Чтобы пользоваться планами подготовки, оформите подписку</p>
+<div className="space-y-4">
+  <div className="flex items-center justify-between">
+    <h2 className="text-xl font-semibold">Активные планы подготовки</h2>
+    {canCreateNewPlan() && (
       <Button asChild>
-        <Link href="/dashboard/subscription">Перейти к подпискам</Link>
+        <Link href="/dashboard/create-plan">
+          <Plus className="h-4 w-4 mr-2" />
+          Добавить план
+        </Link>
       </Button>
-    </CardContent>
-  </Card>
-) : (
-              {userPlans.length > 0 ? (
-                <div className="grid gap-4">
-                  {userPlans.map((plan) => (
-                    <Card key={plan.id}>
-                      <CardHeader>
-                        <div className="flex items-center justify-between">
-                          <div>
-                            <CardTitle className="flex items-center gap-2">
-                              <BookOpen className="h-5 w-5 text-primary" />
-                              {getSubjectName(plan.subject)}
-                            </CardTitle>
-                            <CardDescription>
-                              Целевой балл: {plan.targetScore} | Длительность: {plan.duration}
-                            </CardDescription>
-                          </div>
-                          <Badge variant="secondary">Активный</Badge>
-                        </div>
-                      </CardHeader>
-                      <CardContent className="space-y-4">
-                        <div>
-                          <div className="flex justify-between text-sm mb-2">
-                            <span>Прогресс</span>
-                            <span>{plan.progress}%</span>
-                          </div>
-                          <Progress value={plan.progress} className="h-2" />
-                        </div>
+    )}
+  </div>
 
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-2">
-                            <Clock className="h-4 w-4 text-muted-foreground" />
-                            <span className="text-sm">
-                              Доступно недель: {plan.weeklySchedule?.filter((w) => w.unlocked).length}
-                            </span>
-                          </div>
-                          <div className="flex gap-2">
-                            <Button size="sm" variant="outline" onClick={() => unlockNextWeek(plan.id)}>
-                              Разблокировать неделю
-                            </Button>
-                            <Button size="sm" onClick={() => router.push(`/dashboard?tab=plans&plan=${plan.id}`)}>
-                              Открыть план
-                            </Button>
-                          </div>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  ))}
-                </div>
-              ) : (
-                <Card className="text-center py-12">
-                  <CardContent>
-                    <BookOpen className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                    <h3 className="text-lg font-semibold mb-2">Нет активных планов</h3>
-                    <p className="text-muted-foreground mb-4">Создайте план подготовки к ЕГЭ, чтобы начать обучение</p>
-                    <Button asChild>
-                      <Link href="/dashboard/create-plan">Создать первый план</Link>
-                    </Button>
-                  </CardContent>
-                </Card>
-              )}
-               )}
+  {!subscription ? (
+    <Card className="text-center py-12">
+      <CardContent>
+        <AlertCircle className="h-12 w-12 text-orange-500 mx-auto mb-4" />
+        <h3 className="text-lg font-semibold mb-2">У вас нет активной подписки</h3>
+        <p className="text-muted-foreground mb-4">
+          Чтобы пользоваться планами подготовки, оформите подписку
+        </p>
+        <Button asChild>
+          <Link href="/dashboard/subscription">Перейти к подпискам</Link>
+        </Button>
+      </CardContent>
+    </Card>
+  ) : userPlans.length > 0 ? (
+    <div className="grid gap-4">
+      {userPlans.map((plan) => (
+        <Card key={plan.id}>
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <div>
+                <CardTitle className="flex items-center gap-2">
+                  <BookOpen className="h-5 w-5 text-primary" />
+                  {getSubjectName(plan.subject)}
+                </CardTitle>
+                <CardDescription>
+                  Целевой балл: {plan.targetScore} | Длительность: {plan.duration}
+                </CardDescription>
+              </div>
+              <Badge variant="secondary">Активный</Badge>
             </div>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div>
+              <div className="flex justify-between text-sm mb-2">
+                <span>Прогресс</span>
+                <span>{plan.progress}%</span>
+              </div>
+              <Progress value={plan.progress} className="h-2" />
+            </div>
+
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Clock className="h-4 w-4 text-muted-foreground" />
+                <span className="text-sm">
+                  Доступно недель: {plan.weeklySchedule?.filter((w) => w.unlocked).length}
+                </span>
+              </div>
+              <div className="flex gap-2">
+                <Button size="sm" variant="outline" onClick={() => unlockNextWeek(plan.id)}>
+                  Разблокировать неделю
+                </Button>
+                <Button size="sm" onClick={() => router.push(`/dashboard?tab=plans&plan=${plan.id}`)}>
+                  Открыть план
+                </Button>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      ))}
+    </div>
+  ) : (
+    <Card className="text-center py-12">
+      <CardContent>
+        <BookOpen className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+        <h3 className="text-lg font-semibold mb-2">Нет активных планов</h3>
+        <p className="text-muted-foreground mb-4">
+          Создайте план подготовки к ЕГЭ, чтобы начать обучение
+        </p>
+        <Button asChild>
+          <Link href="/dashboard/create-plan">Создать первый план</Link>
+        </Button>
+      </CardContent>
+    </Card>
+  )}
+</div>
+
            
 
             {/* Subscription Status */}
