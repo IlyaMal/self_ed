@@ -125,17 +125,17 @@ export default function SubscriptionPage() {
                     - Месячная подписка
                   </p>
                   <p className="text-sm text-muted-foreground">
-                    {subscription.isActive
+                    {subscription?.isActive
                       ? `Активна до ${formatSubscriptionEndDate(subscription.endDate)}`
                       : "Подписка неактивна"}
                   </p>
                 </div>
-                <Badge variant={subscription.isActive ? "secondary" : "destructive"}>
+                <Badge variant={subscription?.isActive ? "secondary" : "destructive"}>
                   {subscription.isActive ? "Активна" : "Неактивна"}
                 </Badge>
               </div>
 
-              {subscription.isActive && (
+              {subscription?.isActive && (
                 <div className="space-y-2">
                   <div className="flex justify-between text-sm">
                     <span>Дней до окончания</span>
@@ -145,7 +145,7 @@ export default function SubscriptionPage() {
                 </div>
               )}
 
-              {subscription.isActive && isSubscriptionExpiring(subscription) && (
+              {subscription?.isActive && isSubscriptionExpiring(subscription) && (
                 <Alert variant="destructive">
                   <AlertTriangle className="h-4 w-4" />
                   <AlertDescription>
