@@ -24,18 +24,23 @@ export default function SubscriptionPage() {
   const router = useRouter()
 
   useEffect(() => {
+  async function fetchSubscription() {
     if (!isAuthenticated()) {
       router.push("/auth/login")
       return
     }
 
     const user = getUserData()
-    if (user) {
-      const userSub = getUserSubscription(user.id)
-      setSubscription(userSub)
-    }
+    if (!user) return
+
+    const userSub = await getUserSubscription(user.id) // await!
+    setSubscription(userSub)
     setLoading(false)
-  }, [router])
+  }
+
+  fetchSubscription()
+}, [router])
+
 
   const plans = getAvailablePlans()
 
