@@ -1,8 +1,10 @@
 "use client"
 
 import type React from "react"
-
 import { useState } from "react"
+import { useRouter } from "next/navigation"
+import Link from "next/link"
+import { supabase } from "@/lib/supabase" // ⚡️ убедись, что у тебя есть этот клиент
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -10,8 +12,6 @@ import { Label } from "@/components/ui/label"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Checkbox } from "@/components/ui/checkbox"
 import { BookOpen, Eye, EyeOff, Loader2 } from "lucide-react"
-import Link from "next/link"
-import { useRouter } from "next/navigation"
 
 export default function RegisterPage() {
   const [formData, setFormData] = useState({
@@ -55,23 +55,40 @@ export default function RegisterPage() {
       return
     }
 
-    // Заглушка для регистрации
     try {
-      await new Promise((resolve) => setTimeout(resolve, 1500)) // Имитация запроса
+      // ✅ Регистрация в Supabase
+      const { data, error: signUpError } = await supabase.auth.signUp({
+        email: formData.email,
+        password: formData.password,
+      })
 
-      // Сохраняем данные пользователя (заглушка)
-      localStorage.setItem("auth_token", "mock_token_12345")
-      localStorage.setItem(
-        "user_data",
-        JSON.stringify({
-          id: "1",
-          email: formData.email,
-          name: formData.name,
-        }),
-      )
+      if (signUpError) {
+        setError(signUpError.message)
+        setIsLoading(false)
+        return
+      }
 
+      if (!data.user) {
+        setError("Ошибка: не удалось создать пользователя")
+        setIsLoading(false)
+        return
+      }
+
+      // ✅ Запись в таблицу users
+      const { error: dbError } = await supabase.from("users").insert({
+        id: data.user.id,
+        email: formData.email,
+        password_hash: null, // пароль хранит Supabase, у нас только auth_id
+      })
+
+      if (dbError) {
+        console.error("Ошибка записи в таблицу users:", dbError.message)
+      }
+
+      // Редирект на дашборд
       router.push("/dashboard")
-    } catch (err) {
+    } catch (err: any) {
+      console.error(err)
       setError("Произошла ошибка при регистрации")
     } finally {
       setIsLoading(false)
@@ -90,7 +107,9 @@ export default function RegisterPage() {
         <Card>
           <CardHeader className="text-center">
             <CardTitle className="text-2xl">Регистрация</CardTitle>
-            <CardDescription>Создайте аккаунт для доступа к персональным планам подготовки</CardDescription>
+            <CardDescription>
+              Создайте аккаунт для доступа к персональным планам подготовки
+            </CardDescription>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-4">
