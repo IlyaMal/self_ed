@@ -66,55 +66,54 @@ export default function SubscriptionPage() {
   }, [router, supabase])
 
     async function handleSelectPlan(plan) {
-    const { data: { user }, error: userError } = await supabase.auth.getUser()
-    if (userError || !user) {
-      alert("Вы не авторизованы")
-      return
-    }
-
-    try {
-      // 1. Деактивируем старую подписку (если есть)
-      await supabase
-        .from("subscriptions")
-        .update({ is_active: false })
-        .eq("user_id", user.id)
-        .eq("is_active", true)
-
-      // 2. Считаем даты
-      const startDate = new Date()
-      const endDate = new Date()
-      endDate.setMonth(startDate.getMonth() + 1) // +1 месяц
-
-      // 3. Создаём новую подписку
-      const { data, error } = await supabase.from("subscriptions").insert([
-        {
-          user_id: user.id,
-          plan_id: plan.id,
-          subject_count: plan.subjectCount,
-          is_active: true,
-          start_date: startDate.toISOString(),
-          end_date: endDate.toISOString(),
-        },
-      ])
-
-      if (error) throw error
-
-      // 4. Обновляем локальный стейт
-      setSubscription({
-        id: data[0].id, // id из таблицы subscriptions
-        subjectCount: plan.subjectCount,
-        price: plan.price,
-        isActive: true,
-        startDate,
-        endDate,
-      })
-
-      alert(`Подписка "${plan.name}" успешно оформлена!`)
-    } catch (err) {
-      console.error(err)
-      alert("Ошибка при выборе тарифа")
-    }
+  const { data: { user }, error: userError } = await supabase.auth.getUser()
+  if (userError || !user) {
+    alert("Вы не авторизованы")
+    return
   }
+
+  try {
+    // Деактивируем старую подписку
+    await supabase
+      .from("subscriptions")
+      .update({ is_active: false })
+      .eq("user_id", user.id)
+      .eq("is_active", true)
+
+    const startDate = new Date()
+    const endDate = new Date()
+    endDate.setMonth(startDate.getMonth() + 1)
+
+    // Создаём новую подписку
+    const { data, error } = await supabase.from("subscriptions").insert([
+      {
+        user_id: user.id,
+        plan_id: plan.id,
+        subject_count: plan.subject_count, // ✅ snake_case
+        is_active: true,
+        start_date: startDate.toISOString(),
+        end_date: endDate.toISOString(),
+      },
+    ]).select().single()
+
+    if (error) throw error
+
+    // Обновляем локальный стейт
+    setSubscription({
+      id: data.id,
+      subjectCount: data.subject_count, // ✅ camelCase локально
+      price: plan.price,
+      isActive: true,
+      startDate: new Date(data.start_date),
+      endDate: new Date(data.end_date),
+    })
+
+    alert(`Подписка "${plan.name}" успешно оформлена!`)
+  } catch (err) {
+    console.error(err)
+    alert("Ошибка при выборе тарифа")
+  }
+}
 
 
 
