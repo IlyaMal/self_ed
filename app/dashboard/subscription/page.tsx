@@ -65,6 +65,43 @@ export default function SubscriptionPage() {
     fetchData()
   }, [router, supabase])
 
+  async function handleSelectPlan(plan) {
+  const { data: { user }, error: userError } = await supabase.auth.getUser()
+  if (userError || !user) {
+    alert("Вы не авторизованы")
+    return
+  }
+
+  const { error } = await supabase.from("subscriptions").upsert(
+    {
+      user_id: user.id,
+      plan_id: plan.id,
+      subject_count: plan.subjectCount,
+      price: plan.price,
+      is_active: true,
+      start_date: new Date().toISOString(),
+      end_date: new Date(new Date().setMonth(new Date().getMonth() + 1)).toISOString(), // +1 месяц
+    },
+    { onConflict: "user_id" } // если подписка уже есть → обновит
+  )
+
+  if (error) {
+    console.error(error)
+    alert("Ошибка при выборе тарифа")
+  } else {
+    alert(`Вы выбрали тариф "${plan.name}"`)
+    // тут можно сразу обновить локальный subscription
+    setSubscription({
+      id: plan.id,
+      subjectCount: plan.subjectCount,
+      price: plan.price,
+      isActive: true,
+      startDate: new Date(),
+      endDate: new Date(new Date().setMonth(new Date().getMonth() + 1)),
+    })
+  }
+}
+
 
 
   if (loading) {
@@ -215,10 +252,7 @@ export default function SubscriptionPage() {
                     <Button
                       className="w-full"
                       variant={plan.id === "free" ? "outline" : "default"}
-                      onClick={() => {
-                        // Заглушка для оплаты
-                        alert(`Переход к оплате тарифа "${plan.name}" за ${plan.price} ₽`)
-                      }}
+                      onClick={() => handleSelectPlan(plan)}
                     >
                       {plan.id === "free" ? "Перейти на бесплатный" : "Выбрать тариф"}
                     </Button>
