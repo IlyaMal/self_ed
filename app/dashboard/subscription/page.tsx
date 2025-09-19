@@ -65,42 +65,56 @@ export default function SubscriptionPage() {
     fetchData()
   }, [router, supabase])
 
-  async function handleSelectPlan(plan) {
-  const { data: { user }, error: userError } = await supabase.auth.getUser()
-  if (userError || !user) {
-    alert("Вы не авторизованы")
-    return
-  }
+    async function handleSelectPlan(plan) {
+    const { data: { user }, error: userError } = await supabase.auth.getUser()
+    if (userError || !user) {
+      alert("Вы не авторизованы")
+      return
+    }
 
-  const { error } = await supabase.from("subscriptions").upsert(
-    {
-      user_id: user.id,
-      plan_id: plan.id,
-      subject_count: plan.subjectCount,
-      price: plan.price,
-      is_active: true,
-      start_date: new Date().toISOString(),
-      end_date: new Date(new Date().setMonth(new Date().getMonth() + 1)).toISOString(), // +1 месяц
-    },
-    { onConflict: "user_id" } // если подписка уже есть → обновит
-  )
+    try {
+      // 1. Деактивируем старую подписку (если есть)
+      await supabase
+        .from("subscriptions")
+        .update({ is_active: false })
+        .eq("user_id", user.id)
+        .eq("is_active", true)
 
-  if (error) {
-    console.error(error)
-    alert("Ошибка при выборе тарифа")
-  } else {
-    alert(`Вы выбрали тариф "${plan.name}"`)
-    // тут можно сразу обновить локальный subscription
-    setSubscription({
-      id: plan.id,
-      subjectCount: plan.subjectCount,
-      price: plan.price,
-      isActive: true,
-      startDate: new Date(),
-      endDate: new Date(new Date().setMonth(new Date().getMonth() + 1)),
-    })
+      // 2. Считаем даты
+      const startDate = new Date()
+      const endDate = new Date()
+      endDate.setMonth(startDate.getMonth() + 1) // +1 месяц
+
+      // 3. Создаём новую подписку
+      const { data, error } = await supabase.from("subscriptions").insert([
+        {
+          user_id: user.id,
+          plan_id: plan.id,
+          subject_count: plan.subjectCount,
+          is_active: true,
+          start_date: startDate.toISOString(),
+          end_date: endDate.toISOString(),
+        },
+      ])
+
+      if (error) throw error
+
+      // 4. Обновляем локальный стейт
+      setSubscription({
+        id: data[0].id, // id из таблицы subscriptions
+        subjectCount: plan.subjectCount,
+        price: plan.price,
+        isActive: true,
+        startDate,
+        endDate,
+      })
+
+      alert(`Подписка "${plan.name}" успешно оформлена!`)
+    } catch (err) {
+      console.error(err)
+      alert("Ошибка при выборе тарифа")
+    }
   }
-}
 
 
 
